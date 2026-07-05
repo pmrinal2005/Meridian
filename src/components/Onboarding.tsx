@@ -150,6 +150,7 @@ export default function Onboarding({
                   value={baseUrl}
                   onChange={(e) => setBaseUrl(e.target.value)}
                   placeholder="https://tenant-xxxx.aws.cognee.ai"
+                  autoComplete="url"
                   className="mt-1 w-full rounded-lg border border-slate-300 px-3 py-2 text-sm font-mono outline-none focus:border-primary focus:ring-2 focus:ring-primary/20"
                 />
               </label>
@@ -161,9 +162,11 @@ export default function Onboarding({
                     value={apiKey}
                     onChange={(e) => setApiKey(e.target.value)}
                     placeholder="df8c58d…2a5fd"
+                    autoComplete="off"
                     className="w-full rounded-lg border border-slate-300 px-3 py-2 text-sm font-mono outline-none focus:border-primary focus:ring-2 focus:ring-primary/20"
                   />
                   <button
+                    type="button"
                     onClick={() => setShowKey((v) => !v)}
                     className="shrink-0 rounded-lg border border-slate-300 px-3 py-2 text-xs text-slate-600 hover:bg-slate-50 cursor-pointer"
                   >
@@ -180,7 +183,9 @@ export default function Onboarding({
                   className="mt-1 w-full rounded-lg border border-slate-300 px-3 py-2 text-sm font-mono outline-none focus:border-primary focus:ring-2 focus:ring-primary/20"
                 />
               </label>
-            </div>
+              {/* hidden submit lets Enter advance the step without a visible button */}
+              <button type="submit" className="hidden" aria-hidden="true" tabIndex={-1} />
+            </form>
           )}
 
           {/* STEP 2 — query the REST API */}

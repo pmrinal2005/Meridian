@@ -55,3 +55,12 @@ export const IconThumbDown = (p: SVGProps<SVGSVGElement>) => (
 export const IconClose = (p: SVGProps<SVGSVGElement>) => (
   <svg {...base(p)}><path d="M18 6 6 18M6 6l12 12" /></svg>
 );
+export const IconChevronLeft = (p: SVGProps<SVGSVGElement>) => (
+  <svg {...base(p)}><path d="m15 18-6-6 6-6" /></svg>
+);
+export const IconChevronRight = (p: SVGProps<SVGSVGElement>) => (
+  <svg {...base(p)}><path d="m9 18 6-6-6-6" /></svg>
+);
+export const IconMenu = (p: SVGProps<SVGSVGElement>) => (
+  <svg {...base(p)}><path d="M4 12h16M4 6h16M4 18h16" /></svg>
+);
