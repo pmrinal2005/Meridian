@@ -7,7 +7,7 @@ import { IconAsk, IconArrow, IconSpark } from "@/components/icons";
 import { relDate } from "@/lib/utils";
 
 interface Hit { text: string; score: number; evidence: { label: string; source: string; at: string; excerpt?: string }[] }
-interface RecallResp { mode: string; answer: string; hits: Hit[]; route: string }
+interface RecallResp { mode: string; answer: string; hits: Hit[]; route: string; needsProvision?: boolean }
 
 const SUGGESTIONS = [
   "What is our Q3 pricing model?",
@@ -30,12 +30,15 @@ export default function AskPage() {
   const [q, setQ] = useState("");
   const [loading, setLoading] = useState(false);
   const [resp, setResp] = useState<RecallResp | null>(null);
+  const [provisioning, setProvisioning] = useState(false);
+  const [provMsg, setProvMsg] = useState<string | null>(null);
 
   async function ask(query: string) {
     if (!query.trim()) return;
     setQ(query);
     setLoading(true);
     setResp(null);
+    setProvMsg(null);
     try {
       const r = await apiFetch("/api/recall", {
         method: "POST",
@@ -45,6 +48,26 @@ export default function AskPage() {
       setResp(await r.json());
     } finally {
       setLoading(false);
+    }
+  }
+
+  // One-click provisioning from the Ask panel when the tenant is empty.
+  async function provisionNow() {
+    setProvisioning(true);
+    setProvMsg(null);
+    try {
+      const r = await apiFetch("/api/provision", { method: "POST" });
+      const d = await r.json();
+      if (r.ok && d.ok) {
+        setProvMsg(`Loaded ${d.ingested} sources into your Cognee tenant. Ask again for a live answer.`);
+        if (q.trim()) await ask(q);
+      } else {
+        setProvMsg((d.messages && d.messages[0]) || d.error || "Provisioning failed.");
+      }
+    } catch (e) {
+      setProvMsg(String(e));
+    } finally {
+      setProvisioning(false);
     }
   }
 
@@ -101,6 +124,32 @@ export default function AskPage() {
                 </span>
               </div>
               <p className="text-ink-900 leading-relaxed">{resp.answer}</p>
+
+              {/* Empty-tenant prompt: offer one-click provisioning so recall goes live. */}
+              {resp.needsProvision && (
+                <div className="mt-4 rounded-xl border border-amber-200 bg-amber-50 p-4">
+                  <div className="flex items-start gap-3">
+                    <IconSpark width={18} height={18} className="mt-0.5 shrink-0 text-amber-600" />
+                    <div className="flex-1">
+                      <p className="text-sm font-medium text-amber-900">
+                        Your Cognee tenant is connected but empty.
+                      </p>
+                      <p className="text-xs text-amber-700 mt-1">
+                        Answer above is from seeded demo data. Load the belief graph into your tenant
+                        so <code>recall()</code> returns live, dynamic answers.
+                      </p>
+                      {provMsg && <p className="text-xs text-amber-800 mt-2">{provMsg}</p>}
+                    </div>
+                    <button
+                      onClick={provisionNow}
+                      disabled={provisioning}
+                      className="shrink-0 inline-flex items-center gap-2 rounded-lg bg-amber-600 px-3 py-2 text-xs font-semibold text-white hover:bg-amber-700 transition-colors cursor-pointer disabled:opacity-50"
+                    >
+                      {provisioning ? "Loading…" : "Provision demo memory"}
+                    </button>
+                  </div>
+                </div>
+              )}
             </div>
 
             {/* belief chain */}
