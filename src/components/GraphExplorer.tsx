@@ -1,5 +1,6 @@
 "use client";
 
+import { apiFetch } from "@/lib/credsClient";
 import { useEffect, useMemo, useState } from "react";
 import ReactFlow, { Background, Controls, MarkerType, type Node, type Edge } from "reactflow";
 import "reactflow/dist/style.css";
@@ -49,7 +50,7 @@ export default function GraphExplorer() {
   const [selected, setSelected] = useState<GNode | null>(null);
 
   useEffect(() => {
-    fetch("/api/graph").then((r) => r.json()).then(setData);
+    apiFetch("/api/graph").then((r) => r.json()).then(setData);
   }, []);
 
   const rf = useMemo(() => {
@@ -87,8 +88,10 @@ export default function GraphExplorer() {
         ))}
       </div>
 
-      {/* legend */}
-      <div className="absolute bottom-6 left-4 z-10 bg-white/90 backdrop-blur rounded-xl border border-slate-200 p-3 shadow-card text-xs space-y-1.5">
+      {/* legend — moved to bottom-RIGHT so it never overlaps the
+          React Flow zoom/fit Controls (which live at bottom-left).
+          This resolves the collision that was blocking zoom in/out. */}
+      <div className="absolute bottom-6 right-4 z-10 bg-white/90 backdrop-blur rounded-xl border border-slate-200 p-3 shadow-card text-xs space-y-1.5">
         {Object.entries(TYPE_STYLE).map(([k, v]) => (
           <div key={k} className="flex items-center gap-2"><span className="w-3 h-3 rounded" style={{ background: v.bg, border: `2px solid ${v.border}` }} /><span className="capitalize text-slate-600">{k}</span></div>
         ))}
@@ -104,7 +107,9 @@ export default function GraphExplorer() {
         proOptions={{ hideAttribution: true }}
       >
         <Background color="#e2e8f0" gap={20} />
-        <Controls />
+        {/* Pin the controls to bottom-left explicitly. The legend is now on
+            the opposite side, so the zoom/fit buttons are always clickable. */}
+        <Controls position="bottom-left" />
       </ReactFlow>
 
       {/* detail drawer */}

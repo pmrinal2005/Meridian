@@ -2,9 +2,11 @@
 
 import Link from "next/link";
 import { usePathname } from "next/navigation";
-import { useEffect, useState } from "react";
+import { useCallback, useEffect, useState } from "react";
 import { cn } from "@/lib/utils";
-import { IconRadar, IconGraph, IconAsk, IconLint, IconRitual, IconScroll, IconBrain } from "./icons";
+import { IconRadar, IconGraph, IconAsk, IconLint, IconRitual, IconScroll, IconBrain, IconSpark } from "./icons";
+import Onboarding from "./Onboarding";
+import { apiFetch, hasOnboarded, loadCreds } from "@/lib/credsClient";
 
 const NAV = [
   { href: "/app", label: "Ask", icon: IconAsk, desc: "GraphRAG Q&A" },
@@ -15,15 +17,32 @@ const NAV = [
   { href: "/app/constitution", label: "Constitution", icon: IconScroll, desc: "How the org resolves" },
 ];
 
-interface Mode { configured: boolean; dataset: string; baseUrlHost: string | null }
+interface Mode { configured: boolean; dataset: string; baseUrlHost: string | null; source?: string }
 
 export default function AppShell({ children }: { children: React.ReactNode }) {
   const pathname = usePathname();
   const [mode, setMode] = useState<Mode | null>(null);
+  const [onboardOpen, setOnboardOpen] = useState(false);
+
+  // Refresh the status badge using the browser's own credentials (via apiFetch).
+  const refreshStatus = useCallback(() => {
+    apiFetch("/api/status")
+      .then((r) => r.json())
+      .then((d) => setMode(d.cognee))
+      .catch(() => {});
+  }, []);
 
   useEffect(() => {
-    fetch("/api/status").then((r) => r.json()).then((d) => setMode(d.cognee)).catch(() => {});
-  }, []);
+    refreshStatus();
+    // Auto-open onboarding on the very first visit.
+    if (!hasOnboarded()) setOnboardOpen(true);
+    // React to credential changes fired by the wizard.
+    const onCreds = () => refreshStatus();
+    window.addEventListener("meridian:creds", onCreds);
+    return () => window.removeEventListener("meridian:creds", onCreds);
+  }, [refreshStatus]);
+
+  const live = mode?.configured;
 
   return (
     <div className="min-h-screen bg-slate-50 flex">
@@ -66,23 +85,34 @@ export default function AppShell({ children }: { children: React.ReactNode }) {
         <div className="p-3 border-t border-white/10">
           <div className="rounded-lg bg-white/5 p-3 text-xs">
             <div className="flex items-center gap-2 mb-1">
-              <span className={cn("w-2 h-2 rounded-full", mode?.configured ? "bg-aligned" : "bg-meridian")} />
+              <span className={cn("w-2 h-2 rounded-full", live ? "bg-aligned animate-pulse" : "bg-meridian")} />
               <span className="font-semibold text-slate-200">Cognee memory</span>
             </div>
             <div className="text-slate-400 leading-relaxed">
-              {mode?.configured ? (
-                <>Live tenant · <span className="text-slate-300">{mode.baseUrlHost}</span></>
+              {live ? (
+                <>Live tenant · <span className="text-slate-300">{mode?.baseUrlHost}</span></>
               ) : (
-                <>Offline mock mode. Set <code className="text-meridian">COGNEE_API_KEY</code> to go live.</>
+                <>Offline mock mode. Connect a tenant to load live data.</>
               )}
             </div>
             <div className="text-slate-500 mt-1">dataset: {mode?.dataset || "meridian-demo"}</div>
+
+            <button
+              onClick={() => setOnboardOpen(true)}
+              className="mt-2.5 w-full inline-flex items-center justify-center gap-1.5 rounded-lg bg-primary/20 ring-1 ring-primary/40 px-2.5 py-1.5 text-xs font-medium text-white hover:bg-primary/30 transition-colors cursor-pointer"
+            >
+              <IconSpark width={13} height={13} />
+              {live ? "Manage connection" : "Connect memory"}
+            </button>
           </div>
         </div>
       </aside>
 
       {/* Main */}
       <main className="flex-1 ml-64 min-h-screen">{children}</main>
+
+      {/* Onboarding wizard */}
+      <Onboarding open={onboardOpen} onClose={() => { setOnboardOpen(false); refreshStatus(); }} />
     </div>
   );
 }

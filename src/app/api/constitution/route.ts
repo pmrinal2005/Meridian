@@ -7,8 +7,8 @@ export const runtime = "nodejs";
 
 // The Alignment Constitution lives inside Cognee as a first-class dataset.
 // Amendments require a human-approval click (safety guardrail).
-export async function GET() {
-  return NextResponse.json({ amendments: CONSTITUTION, cognee: cogneeMode() });
+export async function GET(req: NextRequest) {
+  return NextResponse.json({ amendments: CONSTITUTION, cognee: cogneeMode(req.headers) });
 }
 
 // Approve / reject a proposed amendment (human-in-the-loop gate).
@@ -18,5 +18,5 @@ export async function POST(req: NextRequest) {
   if (!amendment) return NextResponse.json({ error: "amendment not found" }, { status: 404 });
   if (action === "approve") amendment.status = "approved";
   else if (action === "reject") amendment.status = "rejected";
-  return NextResponse.json({ amendment, cognee: cogneeMode() });
+  return NextResponse.json({ amendment, cognee: cogneeMode(req.headers) });
 }

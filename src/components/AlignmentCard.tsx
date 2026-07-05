@@ -1,5 +1,6 @@
 "use client";
 
+import { apiFetch } from "@/lib/credsClient";
 import { useState } from "react";
 import type { AlignmentReport, EnrichedBelief } from "@/lib/types";
 import { pct, scoreColor, scoreLabel, relDate } from "@/lib/utils";
@@ -21,14 +22,14 @@ export function AlignmentCard({ report, expanded, onToggle, onChanged }: {
 
   async function vote(v: 1 | -1) {
     setVoted(v);
-    await fetch("/api/feedback", {
+    await apiFetch("/api/feedback", {
       method: "POST", headers: { "Content-Type": "application/json" },
       body: JSON.stringify({ targetType: "alignment", targetId: report.subject.id, vote: v }),
     });
   }
 
   async function scheduleRitual() {
-    const r = await fetch("/api/ritual", {
+    const r = await apiFetch("/api/ritual", {
       method: "POST", headers: { "Content-Type": "application/json" },
       body: JSON.stringify({ subjectId: report.subject.id, action: "schedule" }),
     }).then((r) => r.json());
@@ -43,7 +44,7 @@ export function AlignmentCard({ report, expanded, onToggle, onChanged }: {
   }
 
   async function resolve() {
-    await fetch("/api/ritual", {
+    await apiFetch("/api/ritual", {
       method: "POST", headers: { "Content-Type": "application/json" },
       body: JSON.stringify({ subjectId: report.subject.id, action: "resolve", resolvedBelief: "Canonical belief captured." }),
     });

@@ -1,5 +1,6 @@
 "use client";
 
+import { apiFetch } from "@/lib/credsClient";
 import { useEffect, useState } from "react";
 import PageHeader from "@/components/PageHeader";
 import type { LintFinding, LintCategory } from "@/lib/types";
@@ -28,7 +29,7 @@ export default function LintPage() {
 
   async function run() {
     setLoading(true);
-    const r = await fetch("/api/lint").then((r) => r.json());
+    const r = await apiFetch("/api/lint").then((r) => r.json());
     setFindings(r.findings);
     setSummary(r.summary);
     setLoading(false);

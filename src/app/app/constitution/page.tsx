@@ -1,5 +1,6 @@
 "use client";
 
+import { apiFetch } from "@/lib/credsClient";
 import { useEffect, useState } from "react";
 import PageHeader from "@/components/PageHeader";
 import type { ConstitutionAmendment, ImproveStep } from "@/lib/clientTypes";
@@ -12,13 +13,13 @@ export default function ConstitutionPage() {
   const [running, setRunning] = useState(false);
 
   async function load() {
-    const r = await fetch("/api/constitution").then((r) => r.json());
+    const r = await apiFetch("/api/constitution").then((r) => r.json());
     setAmendments(r.amendments);
   }
   useEffect(() => { load(); }, []);
 
   async function act(id: string, action: "approve" | "reject") {
-    await fetch("/api/constitution", {
+    await apiFetch("/api/constitution", {
       method: "POST", headers: { "Content-Type": "application/json" },
       body: JSON.stringify({ id, action }),
     });
@@ -27,7 +28,7 @@ export default function ConstitutionPage() {
 
   async function runImprove() {
     setRunning(true);
-    const r = await fetch("/api/improve", { method: "POST", headers: { "Content-Type": "application/json" }, body: "{}" }).then((r) => r.json());
+    const r = await apiFetch("/api/improve", { method: "POST", headers: { "Content-Type": "application/json" }, body: "{}" }).then((r) => r.json());
     setImproveResult({ steps: r.steps, mode: r.result?.mode });
     load();
     setRunning(false);

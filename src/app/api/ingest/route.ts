@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from "next/server";
-import { remember, cogneeMode, INGEST_DOCS } from "@/lib/cognee";
+import { remember, cogneeMode, resolveCreds, INGEST_DOCS } from "@/lib/cognee";
 import type { IngestDoc, SourceType } from "@/lib/types";
 
 export const runtime = "nodejs";
@@ -8,13 +8,14 @@ export const runtime = "nodejs";
 // Accepts either a full doc, or {sample:true} to replay seeded docs.
 export async function POST(req: NextRequest) {
   const body = await req.json().catch(() => ({}));
+  const creds = resolveCreds(req.headers);
 
   if (body?.sample) {
     const results = [];
     for (const doc of INGEST_DOCS) {
-      results.push(await remember(doc, { sessionId: `session-${new Date().toISOString().slice(0, 10)}` }));
+      results.push(await remember(doc, { sessionId: `session-${new Date().toISOString().slice(0, 10)}`, creds }));
     }
-    return NextResponse.json({ results, cognee: cogneeMode() });
+    return NextResponse.json({ results, cognee: cogneeMode(req.headers) });
   }
 
   const { source, title, transcript, speaker, subject, project } = body;
@@ -34,10 +35,10 @@ export async function POST(req: NextRequest) {
     transcript,
     at: new Date().toISOString(),
   };
-  const result = await remember(doc, { sessionId: `session-${new Date().toISOString().slice(0, 10)}` });
-  return NextResponse.json({ result, cognee: cogneeMode() });
+  const result = await remember(doc, { sessionId: `session-${new Date().toISOString().slice(0, 10)}`, creds });
+  return NextResponse.json({ result, cognee: cogneeMode(req.headers) });
 }
 
-export async function GET() {
-  return NextResponse.json({ docs: INGEST_DOCS, cognee: cogneeMode() });
+export async function GET(req: NextRequest) {
+  return NextResponse.json({ docs: INGEST_DOCS, cognee: cogneeMode(req.headers) });
 }

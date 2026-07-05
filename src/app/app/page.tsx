@@ -1,5 +1,6 @@
 "use client";
 
+import { apiFetch } from "@/lib/credsClient";
 import { useState } from "react";
 import PageHeader from "@/components/PageHeader";
 import { IconAsk, IconArrow, IconSpark } from "@/components/icons";
@@ -36,7 +37,7 @@ export default function AskPage() {
     setLoading(true);
     setResp(null);
     try {
-      const r = await fetch("/api/recall", {
+      const r = await apiFetch("/api/recall", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ query, searchType: "GRAPH_COMPLETION" }),

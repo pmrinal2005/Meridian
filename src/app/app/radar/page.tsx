@@ -1,5 +1,6 @@
 "use client";
 
+import { apiFetch } from "@/lib/credsClient";
 import { useEffect, useState } from "react";
 import Link from "next/link";
 import PageHeader from "@/components/PageHeader";
@@ -14,7 +15,7 @@ export default function RadarPage() {
 
   async function load() {
     setLoading(true);
-    const r = await fetch("/api/align").then((r) => r.json());
+    const r = await apiFetch("/api/align").then((r) => r.json());
     setReports(r.reports);
     setLoading(false);
   }

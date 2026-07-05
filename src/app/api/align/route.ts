@@ -7,7 +7,7 @@ export const runtime = "nodejs";
 export async function GET(req: NextRequest) {
   const subjectId = req.nextUrl.searchParams.get("subject");
   if (subjectId) {
-    return NextResponse.json({ report: align(subjectId), cognee: cogneeMode() });
+    return NextResponse.json({ report: align(subjectId), cognee: cogneeMode(req.headers) });
   }
-  return NextResponse.json({ reports: alignAll(), cognee: cogneeMode() });
+  return NextResponse.json({ reports: alignAll(), cognee: cogneeMode(req.headers) });
 }

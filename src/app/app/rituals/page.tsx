@@ -1,5 +1,6 @@
 "use client";
 
+import { apiFetch } from "@/lib/credsClient";
 import { useEffect, useState } from "react";
 import PageHeader from "@/components/PageHeader";
 import type { AlignmentReport } from "@/lib/types";
@@ -11,11 +12,11 @@ export default function RitualsPage() {
   const [done, setDone] = useState<Record<string, string>>({});
 
   useEffect(() => {
-    fetch("/api/align").then((r) => r.json()).then((d) => setReports(d.reports.filter((r: AlignmentReport) => r.ritual)));
+    apiFetch("/api/align").then((r) => r.json()).then((d) => setReports(d.reports.filter((r: AlignmentReport) => r.ritual)));
   }, []);
 
   async function schedule(subjectId: string, title: string) {
-    const r = await fetch("/api/ritual", {
+    const r = await apiFetch("/api/ritual", {
       method: "POST", headers: { "Content-Type": "application/json" },
       body: JSON.stringify({ subjectId, action: "schedule" }),
     }).then((r) => r.json());
@@ -29,7 +30,7 @@ export default function RitualsPage() {
   }
 
   async function resolve(subjectId: string) {
-    await fetch("/api/ritual", {
+    await apiFetch("/api/ritual", {
       method: "POST", headers: { "Content-Type": "application/json" },
       body: JSON.stringify({ subjectId, action: "resolve", resolvedBelief: "Canonical belief captured." }),
     });

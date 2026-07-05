@@ -1,4 +1,4 @@
-import { NextResponse } from "next/server";
+import { NextRequest, NextResponse } from "next/server";
 import { BELIEFS, STAKEHOLDERS, SUBJECTS } from "@/lib/seed";
 import { cogneeMode } from "@/lib/cognee";
 import { align } from "@/lib/align";
@@ -7,7 +7,7 @@ export const runtime = "nodejs";
 
 // Belief Graph Explorer data: nodes (stakeholders, subjects, beliefs, evidence)
 // + edges (holds, about, evidenced-by, contradicts).
-export async function GET() {
+export async function GET(req: NextRequest) {
   const nodes: any[] = [];
   const edges: any[] = [];
 
@@ -36,5 +36,5 @@ export async function GET() {
     }
   }
 
-  return NextResponse.json({ nodes, edges, cognee: cogneeMode() });
+  return NextResponse.json({ nodes, edges, cognee: cogneeMode(req.headers) });
 }

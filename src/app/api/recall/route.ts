@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from "next/server";
-import { recall, cogneeMode } from "@/lib/cognee";
+import { recall, cogneeMode, resolveCreds } from "@/lib/cognee";
 
 export const runtime = "nodejs";
 
@@ -9,6 +9,7 @@ export async function POST(req: NextRequest) {
   if (!query || typeof query !== "string") {
     return NextResponse.json({ error: "query is required" }, { status: 400 });
   }
-  const result = await recall(query, { searchType, nodeName });
-  return NextResponse.json({ ...result, cognee: cogneeMode() });
+  const creds = resolveCreds(req.headers);
+  const result = await recall(query, { searchType, nodeName, creds });
+  return NextResponse.json({ ...result, cognee: cogneeMode(req.headers) });
 }

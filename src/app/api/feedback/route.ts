@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from "next/server";
-import { improve, cogneeMode } from "@/lib/cognee";
+import { improve, cogneeMode, resolveCreds } from "@/lib/cognee";
 
 export const runtime = "nodejs";
 
@@ -10,11 +10,12 @@ export async function POST(req: NextRequest) {
   if (![1, -1].includes(vote)) {
     return NextResponse.json({ error: "vote must be 1 or -1" }, { status: 400 });
   }
-  const imp = await improve({ feedbackAlpha: vote === 1 ? 0.05 : -0.05, nodeName: [targetId] });
+  const creds = resolveCreds(req.headers);
+  const imp = await improve({ feedbackAlpha: vote === 1 ? 0.05 : -0.05, nodeName: [targetId], creds });
   return NextResponse.json({
     ok: true,
     recorded: { targetType, targetId, vote },
     improve: imp,
-    cognee: cogneeMode(),
+    cognee: cogneeMode(req.headers),
   });
 }

@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from "next/server";
-import { improve, cogneeMode } from "@/lib/cognee";
+import { improve, cogneeMode, resolveCreds } from "@/lib/cognee";
 import { CONSTITUTION } from "@/lib/seed";
 
 export const runtime = "nodejs";
@@ -17,8 +17,9 @@ export async function POST(req: NextRequest) {
 
   const body = await req.json().catch(() => ({}));
   const sessionIds = body?.sessionIds || [`session-${new Date().toISOString().slice(0, 10)}`];
+  const creds = resolveCreds(req.headers);
 
-  const result = await improve({ sessionIds, feedbackAlpha: body?.feedbackAlpha });
+  const result = await improve({ sessionIds, feedbackAlpha: body?.feedbackAlpha, creds });
 
   // Surface the pending Constitution amendment proposed by the loop.
   const proposedAmendment = CONSTITUTION.find((c) => c.status === "proposed") || null;
@@ -32,12 +33,12 @@ export async function POST(req: NextRequest) {
       { name: "Constitution", detail: proposedAmendment ? `Proposed amendment v${proposedAmendment.version} (needs approval).` : "No new amendment." },
       { name: "Prune", detail: `Pruned ${result.pruned} stale belief(s) via forget().` },
     ],
-    cognee: cogneeMode(),
+    cognee: cogneeMode(req.headers),
   });
 }
 
-// Vercel Cron hits GET on a schedule.
-export async function GET() {
-  const result = await improve({ sessionIds: [`session-${new Date().toISOString().slice(0, 10)}`] });
-  return NextResponse.json({ result, cron: true, cognee: cogneeMode() });
+// Vercel Cron hits GET on a schedule (uses server env creds, if any).
+export async function GET(req: NextRequest) {
+  const result = await improve({ sessionIds: [`session-${new Date().toISOString().slice(0, 10)}`], creds: resolveCreds(req.headers) });
+  return NextResponse.json({ result, cron: true, cognee: cogneeMode(req.headers) });
 }
